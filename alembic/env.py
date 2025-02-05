@@ -18,10 +18,6 @@ if config.config_file_name is not None:
 
 # 데이터베이스 URL을 환경 변수에서 가져옴
 database_url = os.getenv("DATABASE_URL")
-if not database_url:
-    raise ValueError(
-        "DATABASE_URL is not set in the environment variables or .env file."
-    )
 
 # Alembic 설정에서 DB URL을 직접 설정
 config.set_main_option("sqlalchemy.url", database_url)
