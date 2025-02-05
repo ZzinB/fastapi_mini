@@ -8,6 +8,7 @@ from app.database import init_db
 
 app = FastAPI()
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("🚀 서버 시작: 데이터베이스 초기화")
@@ -15,7 +16,10 @@ async def lifespan(app: FastAPI):
     yield  # 서버 실행 유지
     print("🛑 서버 종료")
 
+
 @app.get("/")
 def read_root():
-    return {"message": "Hello, FastAPI with PostgreSQL!","database_url": settings.DATABASE_URL}
-
+    return {
+        "message": "Hello, FastAPI with PostgreSQL!",
+        "database_url": settings.DATABASE_URL,
+    }

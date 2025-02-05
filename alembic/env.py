@@ -19,7 +19,9 @@ if config.config_file_name is not None:
 # 데이터베이스 URL을 환경 변수에서 가져옴
 database_url = os.getenv("DATABASE_URL")
 if not database_url:
-    raise ValueError("DATABASE_URL is not set in the environment variables or .env file.")
+    raise ValueError(
+        "DATABASE_URL is not set in the environment variables or .env file."
+    )
 
 # Alembic 설정에서 DB URL을 직접 설정
 config.set_main_option("sqlalchemy.url", database_url)
@@ -30,6 +32,7 @@ print(f"Loaded DATABASE_URL: {database_url}")
 from app.models import Base  # 모델 정의한 위치에 맞게 수정 필요
 
 target_metadata = Base.metadata
+
 
 def run_migrations_offline() -> None:
     """오프라인 모드에서 마이그레이션 실행"""
@@ -44,6 +47,7 @@ def run_migrations_offline() -> None:
     with context.begin_transaction():
         context.run_migrations()
 
+
 def run_migrations_online() -> None:
     """온라인 모드에서 마이그레이션 실행"""
     connectable = engine_from_config(
@@ -53,12 +57,11 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

@@ -19,9 +19,11 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # 베이스 모델 생성
 Base = declarative_base()
 
+
 # 모델과 데이터베이스 테이블을 동기화하는 함수
 def init_db():
     Base.metadata.create_all(bind=engine)
+
 
 # 데이터베이스 세션 의존성 설정하는 함수
 def get_db():
