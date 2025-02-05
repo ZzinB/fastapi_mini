@@ -27,5 +27,4 @@ settings = Settings()
 
 # 설정 값 출력 (확인용)
 print(settings.DATABASE_URL)
-print(settings.SECRET_KEY)
 print(settings.DEBUG)
