@@ -70,8 +70,12 @@ jobs:
             sleep 1
           done
 
-      - name: Set DATABASE_URL environment variable
-        run: echo "DATABASE_URL=postgresql://${{ secrets.PG_USER }}:${{ secrets.PG_PASSWORD }}@localhost:5432/${{ secrets.PG_NAME }}" >> $GITHUB_ENV
+      # .env 환경 구성
+      - name: Set environment variable
+        run: |
+          echo "DATABASE_URL=postgresql://${{ secrets.PG_USER }}:${{ secrets.PG_PASSWORD }}@localhost:5432/${{ secrets.PG_NAME }}" >> $GITHUB_ENV
+#          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> $GITHUB_ENV
+          echo "DEBUG=${{ secrets.DEBUG }}" >> $GITHUB_ENV
 
       # 정상적인 db 연결을 확인했으니 마이그레이션 수행 (FastAPI에서는 Alembic을 사용)
       - name: Run Alembic Migration

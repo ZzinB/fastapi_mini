@@ -14,7 +14,7 @@ ENV_PROD_PATH = os.path.join(BASE_DIR, ".env.prod")
 
 class Settings(BaseSettings):
     DATABASE_URL: str
-    SECRET_KEY: str
+    #SECRET_KEY: str
     DEBUG: bool
 
     class Config:
