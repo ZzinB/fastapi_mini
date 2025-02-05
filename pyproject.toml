@@ -26,6 +26,7 @@ pydantic = "^2.10.6"
 isort = "^6.0.0"
 ruff = "^0.9.4"
 pre-commit = "^4.1.0"
+httpx = "^0.28.1"
 
 [tool.ruff]
 line-length = 120
