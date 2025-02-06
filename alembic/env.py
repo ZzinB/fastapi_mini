@@ -1,38 +1,43 @@
+import asyncio
 import os
-from logging.config import fileConfig
 
 from dotenv import load_dotenv
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 from alembic import context
+from app.models import Base  # SQLAlchemy 모델
 
 # .env 파일 로드
 load_dotenv()
 
-# Alembic 설정 객체 가져오기
-config = context.config
+# 비동기 SQLAlchemy 엔진 사용
+engine = create_async_engine(os.getenv("DATABASE_URL"), pool_pre_ping=True)
 
-# 로깅 설정 적용
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
-
-# 데이터베이스 URL을 환경 변수에서 가져옴
-database_url = os.getenv("DATABASE_URL")
-
-# Alembic 설정에서 DB URL을 직접 설정
-config.set_main_option("sqlalchemy.url", database_url)
-print(f"Loaded DATABASE_URL: {database_url}")
-
+# 세션을 비동기로 사용하도록 설정
+AsyncSession = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
 # 모델의 MetaData 불러오기
-from app.models import Base  # 모델 정의한 위치에 맞게 수정 필요
-
 target_metadata = Base.metadata
+
+
+def do_run_migrations(connection):
+    """동기 방식으로 마이그레이션 실행"""
+    context.configure(connection=connection, target_metadata=target_metadata)
+
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+async def run_migrations_online() -> None:
+    """온라인 모드에서 마이그레이션 실행"""
+    async with engine.connect() as connection:
+        await connection.run_sync(do_run_migrations)  # 여기에서 run_sync 사용
 
 
 def run_migrations_offline() -> None:
     """오프라인 모드에서 마이그레이션 실행"""
-    url = config.get_main_option("sqlalchemy.url")
+    url = os.getenv("DATABASE_URL")  # .env에서 URL을 가져옵니다.
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -44,22 +49,7 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def run_migrations_online() -> None:
-    """온라인 모드에서 마이그레이션 실행"""
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
-
-    with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
-
-        with context.begin_transaction():
-            context.run_migrations()
-
-
 if context.is_offline_mode():
     run_migrations_offline()
 else:
-    run_migrations_online()
+    asyncio.run(run_migrations_online())  # 비동기 함수 실행
