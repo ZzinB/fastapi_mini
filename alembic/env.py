@@ -12,10 +12,16 @@ from app.models import Base  # SQLAlchemy 모델
 load_dotenv()
 
 # 비동기 SQLAlchemy 엔진 사용
-engine = create_async_engine(os.getenv("DATABASE_URL"), pool_pre_ping=True)
+engine = create_async_engine(os.getenv("DATABASE_URL"), echo=True, pool_pre_ping=True)
 
 # 세션을 비동기로 사용하도록 설정
-AsyncSession = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
+AsyncSession = sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autocommit=False,
+    autoflush=False,
+)
 
 # 모델의 MetaData 불러오기
 target_metadata = Base.metadata
