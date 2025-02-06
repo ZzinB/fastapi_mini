@@ -2,42 +2,22 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.db import database  # 비동기 데이터베이스 연결 설정
+from app.db import close_async_db, engine  # DB 관련 모듈 가져오기
 
 
-# 서비스 시작
-def start():
-    print("service is started.")
-
-
-# 서비스 종료
-def shutdown():
-    print("service is stopped.")
-
-
-# FastAPI lifespan 설정
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 서비스 시작 시 데이터베이스 연결
-    start()
-    await database.connect()  # 비동기 연결
-
+    print("Connecting to database...")
+    async with engine.begin() as conn:
+        await conn.run_sync(lambda c: None)  # 엔진이 준비되었는지 확인
     yield
-
-    # 서비스 종료 시 데이터베이스 연결 끊기
-    await database.disconnect()  # 비동기 연결 끊기
-    shutdown()
+    print("Closing database connection...")
+    await close_async_db()  # 애플리케이션 종료 시 정리
 
 
-# FastAPI 앱 생성 시 lifespan 사용
 app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/")
-def read_root():
-    from app.core.config import settings
-
-    return {
-        "message": "Hello, FastAPI with PostgreSQL!",
-        "database_url": settings.DATABASE_URL,
-    }
+async def read_root():
+    return {"message": "Hello, FastAPI with PostgreSQL!"}
