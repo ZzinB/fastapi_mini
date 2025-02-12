@@ -28,3 +28,26 @@ settings = Settings()
 # 설정 값 출력 (확인용)
 print(settings.DATABASE_URL)
 print(settings.DEBUG)
+
+
+"""
+import os
+from pydantic import BaseSettings
+from dotenv import load_dotenv
+
+# 현재 환경이 'production'이면 .env.prod, 아니면 .env 사용
+ENV_FILE = ".env.prod" if os.getenv("ENV") == "production" else ".env"
+load_dotenv(ENV_FILE)
+
+
+class Settings(BaseSettings):
+    DEBUG: bool = os.getenv("DEBUG", "False") == "True"
+    DATABASE_URL: str = os.getenv("DATABASE_URL")
+    SECRET_KEY: str = os.getenv("SECRET_KEY")
+
+    class Config:
+        env_file = ENV_FILE
+
+
+settings = Settings()
+"""

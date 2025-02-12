@@ -2,7 +2,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.db import close_async_db, engine  # DB 관련 모듈 가져오기
+from app.database import close_async_db, engine  # DB 관련 모듈 가져오기
+from app.routes import users
 
 
 @asynccontextmanager
@@ -16,6 +17,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.include_router(users.router)
 
 
 @app.get("/")

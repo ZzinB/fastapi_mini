@@ -1,13 +1,14 @@
-from fastapi.testclient import TestClient
+import pytest
+from httpx import ASGITransport, AsyncClient
 
 from app.main import app
 
-client = TestClient(app)
 
-
-def test_read_root():
-    response = client.get("/")
+@pytest.mark.anyio
+async def test_root():
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/")
     assert response.status_code == 200
-    data = response.json()
-    assert "message" in data
-    assert data["message"] == "Hello, FastAPI with PostgreSQL!"
+    assert response.json() == {"message": "Hello, FastAPI with PostgreSQL!"}
