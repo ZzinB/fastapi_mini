@@ -1,15 +1,12 @@
-import datetime
-import enum
-
 from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
-    Enum,
     ForeignKey,
     Integer,
     Numeric,
     String,
+    func,
 )
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, relationship
@@ -21,64 +18,17 @@ class Base(AsyncAttrs, DeclarativeBase):
     pass
 
 
-class BankCode(enum.Enum):
-    알수없음 = "000"
-    한국은행 = "001"
-    산업은행 = "002"
-    기업은행 = "003"
-    국민은행 = "004"
-    # 필요 시 추가
-
-
-class AccountType(enum.Enum):
-    CHECKING = "입출금"
-    SAVING = "적금"
-    LOAN = "대출"
-    PENSION = "연금"
-    TRUST = "신탁"
-    FOREIGN_CURRENCY = "외화"
-    IRP = "퇴직연금"
-    STOCK = "주식"
-
-
-class TransactionType(enum.Enum):
-    DEPOSIT = "입금"
-    WITHDRAW = "출금"
-
-
-class TransactionMethod(enum.Enum):
-    ATM = "ATM 거래"
-    TRANSFER = "계좌이체"
-    AUTOMATIC_TRANSFER = "자동이체"
-    CARD = "카드결제"
-    INTEREST = "이자"
-
-
-class AnalysisType(enum.Enum):
-    DAILY = "일간"
-    WEEKLY = "주간"
-    MONTHLY = "월간"
-    YEARLY = "연간"
-
-
-class AnalysisAbout(enum.Enum):
-    TOTAL_SPENDING = "총 지출"
-    TOTAL_INCOME = "총 수입"
-
-
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
-    is_deleted = Column(Boolean, default=False)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(
-        DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow
-    )
+    is_active = Column(Boolean, default=True)  # 활성화 여부
+    is_deleted = Column(Boolean, default=False)  # 삭제 여부
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     accounts = relationship("Account", back_populates="user")
     analyses = relationship("Analysis", back_populates="user")
@@ -87,16 +37,17 @@ class User(Base):
 class Account(Base):
     __tablename__ = "accounts"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    bank_code = Column(Enum(BankCode), nullable=False)
+    bank_code = Column(String, nullable=False)  # BANK_CODES를 사용할 예정
     account_number = Column(String, unique=True, nullable=False)
-    account_type = Column(Enum(AccountType), nullable=False)
+    account_type = Column(String, nullable=False)  # ACCOUNT_TYPE을 사용할 예정
     balance = Column(Numeric, default=0)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(
-        DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow
-    )
+
+    is_active = Column(Boolean, default=True)  # 활성화 여부
+    is_deleted = Column(Boolean, default=False)  # 삭제 여부
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     user = relationship("User", back_populates="accounts")
     transactions = relationship("Transaction", back_populates="account")
@@ -105,15 +56,13 @@ class Account(Base):
 class Transaction(Base):
     __tablename__ = "transactions"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False)
-    transaction_type = Column(Enum(TransactionType), nullable=False)
-    transaction_method = Column(Enum(TransactionMethod), nullable=False)
+    transaction_type = Column(String, nullable=False)  # TRANSACTION_TYPE을 사용할 예정
+    transaction_method = Column(String, nullable=False)  # TRANSACTION_METHOD을 사용할 예정
     amount = Column(Numeric, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(
-        DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow
-    )
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     account = relationship("Account", back_populates="transactions")
 
@@ -123,12 +72,10 @@ class Analysis(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    analysis_type = Column(Enum(AnalysisType), nullable=False)
-    analysis_about = Column(Enum(AnalysisAbout), nullable=False)
+    analysis_type = Column(String, nullable=False)  # ANALYSIS_TYPES을 사용할 예정
+    analysis_about = Column(String, nullable=False)  # ANALYSIS_ABOUT을 사용할 예정
     amount = Column(Numeric, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(
-        DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow
-    )
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     user = relationship("User", back_populates="analyses")

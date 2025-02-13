@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta, timezone
 
 import jwt
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -12,13 +13,15 @@ from app.core.security import (
     hash_password,
     is_token_blacklisted,
     verify_password,
+    verify_token,
 )
+from app.database import get_async_db
 from app.models import User
 from app.schemas import UserCreate, UserUpdate
 
 
 # 이메일 중복 체크
-async def get_user_by_email(db: AsyncSession, email: str):
+async def get_user_by_email(db: AsyncSession, email: str) -> User:
     result = await db.execute(select(User).filter(User.email == email))
     return result.scalars().first()
 
@@ -174,3 +177,37 @@ async def get_user(db: AsyncSession, user_id: int):
         )
 
     return user
+
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+async def get_current_user(
+    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_async_db)
+) -> User:
+    try:
+        # JWT 토큰에서 사용자 정보 추출
+        payload = verify_token(token, algorithms=["HS256"])
+        print(f"Payload: {payload}")
+        email: str = payload.get("sub")
+        print(f"Email: {email}")
+        if email is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+            )
+
+        # 이메일 기반으로 사용자 찾기
+        user = await get_user_by_email(db, email)
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
+        return user
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired"
+        )
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )

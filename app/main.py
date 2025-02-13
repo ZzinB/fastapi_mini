@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.database import close_async_db, engine  # DB 관련 모듈 가져오기
-from app.routes import users
+from app.routes import accounts, analysis, transactions, users
 
 
 @asynccontextmanager
@@ -19,8 +19,18 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(users.router)
+app.include_router(accounts.router)
+app.include_router(transactions.router)
+app.include_router(analysis.router)
 
 
 @app.get("/")
 async def read_root():
     return {"message": "Hello, FastAPI with PostgreSQL!"}
+
+
+"""
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(init_db())
+"""

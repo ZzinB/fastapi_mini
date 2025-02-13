@@ -12,7 +12,7 @@ AsyncSessionLocal = sessionmaker(
 )
 
 
-# 의존성 주입 함수
+# 의존성 주입 함수(init_db)
 async def get_async_db():
     async with AsyncSessionLocal() as session:
         yield session

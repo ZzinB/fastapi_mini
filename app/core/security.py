@@ -5,9 +5,9 @@ import jwt
 from fastapi import HTTPException, status
 from passlib.context import CryptContext
 
-SECRET_KEY = "your_secret_key"
+SECRET_KEY = "my_super_secret_key_"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30  # 액세스 토큰 만료 시간 (30분)
+ACCESS_TOKEN_EXPIRE_MINUTES = 10  # 액세스 토큰 만료 시간 (30분)
 
 # 암호화 패스워드 해시
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -32,20 +32,23 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         expire = datetime.now(timezone.utc) + timedelta(
             minutes=ACCESS_TOKEN_EXPIRE_MINUTES
         )
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "sub": data["email"]})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
 # JWT 토큰 검증
-def verify_token(token: str) -> dict:
+def verify_token(token: str, algorithms: list):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=algorithms)
         return payload
-    except jwt.PyJWTError:
+    except jwt.ExpiredSignatureError:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token is invalid or expired",
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired"
+        )
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
         )
 
 
